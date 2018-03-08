@@ -1,29 +1,37 @@
 'use strict';
 
 // TEMP: Simple In-Memory Database
-const data = require('./db/notes');
-const simDB = require('./db/simDB');
-const notes = simDB.initialize(data);
-
-console.log('hello world!');
+const { PORT } = require('./config');
+const morgan = require('morgan');
+const notesRouter = require('./router/notes.router');
 
 // INSERT EXPRESS APP CODE HERE...
 const express = require('express');
 const app = express();
+
+app.use(morgan('dev'));
+
 app.use(express.static('public'));
 
-app.get('/api/notes', (req, res) => {
-  const searchTerm = req.query.searchTerm;
-  searchTerm ? 
-    res.json(data.filter(item => item.title.includes(searchTerm))) : 
-    res.json(data);
+app.use(express.json());
+
+app.use('/v1', notesRouter);
+
+app.use(function (req, res, next) {
+  var err = new Error('Not Found');
+  err.status = 404;
+  res.status(404).json({ message: 'Not Found'});
 });
 
-app.get('/api/notes/:id', (req, res) => {
-  res.json(data.find(item => item.id === Number(req.params.id)));
+app.use(function (err, req, res, next) {
+  res.status(err.status || 500);
+  res.json({
+    message: err.message,
+    error: err
+  });
 });
 
-app.listen(8080, function () {
+app.listen(PORT, function () {
   console.info(`Server listening on ${this.address().port}`);
 }).on('error', err => {
   console.error(err);
