@@ -9,34 +9,43 @@ const notes = simDB.initialize(data);
 
 router.get('/notes', (req, res, next) => {
   const { searchTerm } = req.query;
-  
-  notes.filter(searchTerm, (err, list) => {
-    if (err) {
+  notes.filter(searchTerm)
+    .then(list => {
+      res.json(list);
+    })
+    .catch(err => {
       return next(err);
-    }
-    res.json(list);
-  });
+    });
 });
 
 router.delete('/notes/:id', (req, res, next) => {
   const { id } = req.params;
-  notes.delete(id, (err) => {
-    if (err) {
-      return next(err);
-    }
-    res.send(204);
-  });
+  notes.delete(id)
+    .then(item => {
+      if (item) {
+        res.send(204);
+      } else {
+        next();
+      }
+    })
+    .catch(err => {
+      next(err);
+    });
 });
   
 router.get('/notes/:id', (req, res, next) => {
   const { id } = req.params;
-  
-  notes.find(id, (err, note) => {
-    if (err) {
-      return next(err);
-    }
-    note ? res.json(note) : next();
-  });
+  notes.find(id)
+    .then(item => {
+      if (item) {
+        res.json(item);
+      } else {
+        next();
+      }
+    })
+    .catch(err => {
+      next(err);
+    });
 });
   
 router.put('/notes/:id', (req, res, next) => {
@@ -51,16 +60,17 @@ router.put('/notes/:id', (req, res, next) => {
       updateObj[field] = req.body[field];
     }
   });
-  notes.update(id, updateObj, (err, item) => {
-    if (err) {
+  notes.update(id, updateObj)
+    .then(item => {
+      if (item) {
+        res.json(item);
+      } else {
+        next();
+      }
+    })
+    .catch(err => {
       return next(err);
-    }
-    if (item) {
-      res.json(item);
-    } else {
-      next();
-    }
-  });
+    });
 });
 
 // Post (insert) an item
@@ -75,16 +85,18 @@ router.post('/notes', (req, res, next) => {
     return next(err);
   }
 
-  notes.create(newItem, (err, item) => {
-    if (err) {
+  notes.create(newItem)
+    .then(item => {
+      if (item) {
+        res.location(`http://${req.headers.host}/notes/${item.id}`).status(201).json(item);
+      }
+      else {
+        next();
+      }
+    })
+    .catch(err => {
       return next(err);
-    }
-    if (item) {
-      res.location(`http://${req.headers.host}/notes/${item.id}`).status(201).json(item);
-    } else {
-      next();
-    }
-  });
+    });
 });
 
 module.exports = router;
