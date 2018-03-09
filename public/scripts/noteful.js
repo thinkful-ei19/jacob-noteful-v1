@@ -95,8 +95,8 @@ const noteful = (function () {
   }
 
   function searchApiWithTerm(searchTerm) {
-    api.search(searchTerm).then(updateResponse => {
-      store.notes = updateResponse;
+    api.search(searchTerm).then(searchResponse => {
+      store.notes = searchResponse;
       render();
     });
   }
@@ -113,7 +113,7 @@ const noteful = (function () {
     $('.js-notes-list').on('click', '.js-note-delete-button', event => {
       event.preventDefault();
       const id = $(event.currentTarget).closest('li').attr('data-id');
-      api.delete(id).then(res => {
+      api.delete(id).then(() => {
         if (id === store.currentNote.id) {
           store.currentNote = {};
         }
